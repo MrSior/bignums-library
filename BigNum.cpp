@@ -307,7 +307,12 @@ BigNum operator*(const BigNum& first, const BigNum& second) {
     return res;
 }
 
-BigNum operator/(BigNum first, BigNum second) {
+BigNum operator/(const BigNum& first, const BigNum& second) {
+    BigNum res;
+    BigNum remain = 1;
+    while (remain != 0) {
+
+    }
     return BigNum();
 }
 
@@ -317,4 +322,18 @@ void swap(BigNum &lhs, BigNum &rhs) {
     std::swap(lhs.exp_, rhs.exp_);
     std::swap(lhs.sign_, rhs.sign_);
     std::swap(lhs.base_, rhs.base_);
+}
+
+bool operator!=(const BigNum& first, const BigNum& second) {
+    return !(first == second);
+}
+
+bool operator==(const BigNum& first, const BigNum& second) {
+    auto first_str = first.toString();
+    auto second_str = second.toString();
+    return std::equal(first_str.begin(), first_str.end(), second_str.begin(), second_str.end());
+}
+
+bool operator>(const BigNum& first, const BigNum& second) {
+    return second < first && second != first;
 }

@@ -7,11 +7,11 @@ int main()
 {
     BigNum a = 11;
     a.printBlocks();
-    BigNum b = 1000;
+    BigNum b = 1;
     b.printBlocks();
     BigNum c = a * b;
     c.printBlocks();
 //    a = b;
-    std::cout << c.toString();
+    std::cout << (c != a);
     return 0;
 }

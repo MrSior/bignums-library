@@ -68,10 +68,13 @@ public:
 
     friend BigNum operator+(BigNum, BigNum);
     friend BigNum operator-(BigNum, BigNum);
-    friend BigNum operator/(BigNum first, BigNum second);
+    friend BigNum operator/(const BigNum&, const BigNum&);
     friend BigNum operator*(const BigNum&, const BigNum&);
 
-    friend bool operator<(const BigNum& first, const BigNum& second);
+    friend bool operator<(const BigNum&, const BigNum&);
+    friend bool operator!=(const BigNum&, const BigNum&);
+    friend bool operator==(const BigNum&, const BigNum&);
+    friend bool operator>(const BigNum&, const BigNum&);
 };
 
 
