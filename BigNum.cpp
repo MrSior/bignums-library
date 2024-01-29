@@ -21,7 +21,7 @@ void BigNum::Init() {
     blocks_ = std::vector<uint16_t>(0);
     sign_ = 1;
     exp_ = 0;
-    block_size_ = std::to_string(base_).length();
+    block_size_ = std::to_string(base_).length() - 1;
 //    base_ = static_cast<uint64_t>(std::pow(10, block_size_));
 }
 
@@ -81,7 +81,7 @@ std::string BigNum::toString(bool with_sign, bool with_dote) const {
     if (exp_ < 0 && res.length() < -exp_) {
         res = std::string((-exp_) - res.length(), '0') + res;
     }
-    if (exp_ > 0 && res.length() < exp_) {
+    if (exp_ > 0) {
         res += std::string(exp_, '0');
     }
 
@@ -247,9 +247,13 @@ BigNum::BigNum(const BigNum &other) {
 
 bool operator<(const BigNum &first, const BigNum &second) {
     if (first.sign_ < second.sign_) return true;
+    if (first.sign_ > second.sign_) return false;
 
     auto str1 = first.toString(false);
     auto str2 = second.toString(false);
+
+    if (str1.length() < str2.length()) return true;
+    if (str1.length() > str2.length()) return false;
 
     for (size_t ind = 0; ind < std::max(str1.length(), str2.length()); ++ind) {
         if (ind < str1.length() && ind < str2.length()) {
@@ -302,13 +306,23 @@ BigNum operator*(const BigNum& first, const BigNum& second) {
     return res;
 }
 
-BigNum operator/(const BigNum& first, const BigNum& second) {
-    BigNum res;
-    BigNum remain = 1;
-    while (remain != 0) {
-
+BigNum operator/(BigNum first, const BigNum& second) {
+    if (first == 0) return 0;
+    BigNum res = 0;
+    BigNum divider = 0;
+    auto tmp = (divider + 1) * second;
+    while ((divider + 1) * second <= first) {
+        divider = divider + 1;
     }
-    return BigNum();
+    if (divider == 0) {
+        first = first * 10;
+        --res.exp_;
+        res = first / second;
+    } else {
+        first = first - second * divider;
+        res = res + divider + first / second;
+    }
+    return res;
 }
 
 void swap(BigNum &lhs, BigNum &rhs) {
@@ -330,4 +344,12 @@ bool operator==(const BigNum& first, const BigNum& second) {
 
 bool operator>(const BigNum& first, const BigNum& second) {
     return second < first && second != first;
+}
+
+bool operator>=(const BigNum& first, const BigNum& second) {
+    return second < first || second == first;
+}
+
+bool operator<=(const BigNum& first, const BigNum& second) {
+    return first < second || first == second;
 }

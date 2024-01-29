@@ -5,13 +5,13 @@
 
 int main()
 {
-    BigNum a = 11;
+    BigNum a = 10;
     a.printBlocks();
-    BigNum b = 1;
+    BigNum b = 20;
     b.printBlocks();
-    BigNum c = a * b;
+    BigNum c = a / b;
     c.printBlocks();
 //    a = b;
-    std::cout << (c != a);
+    std::cout << c.toString();
     return 0;
 }
