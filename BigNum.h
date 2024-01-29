@@ -23,7 +23,7 @@ class BigNum {
 private:
     std::vector<uint16_t> blocks_;
     int sign_;
-    uint64_t base_;
+    static const uint64_t base_ = 10000;
     int32_t exp_;
     int block_size_;
 
