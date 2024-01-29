@@ -5,9 +5,9 @@
 
 int main()
 {
-    BigNum a = -1.1234;
+    BigNum a = 11;
     a.printBlocks();
-    BigNum b = 0.3;
+    BigNum b = 1000;
     b.printBlocks();
     BigNum c = a * b;
     c.printBlocks();

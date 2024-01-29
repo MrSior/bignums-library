@@ -70,9 +70,6 @@ void BigNum::Init(std::string str) {
 
 std::string BigNum::toString(bool with_sign, bool with_dote) const {
     std::string res;
-    if (with_sign) {
-        res += (sign_ == -1 ? "-" : "");
-    }
     for (auto itr = blocks_.end() - 1; itr >= blocks_.begin(); --itr) {
         std::string num = std::to_string(*itr);
         if (itr == blocks_.end() - 1) {
@@ -81,11 +78,23 @@ std::string BigNum::toString(bool with_sign, bool with_dote) const {
             res += std::string(block_size_ - num.length(), '0') + num;
         }
     }
+
+    if (exp_ < 0 && res.length() < -exp_) {
+        res = std::string((-exp_) - res.length(), '0') + res;
+    }
+    if (exp_ > 0 && res.length() < exp_) {
+        res += std::string(exp_, '0');
+    }
+
     if (with_dote && exp_ < 0) {
         res.insert(res.begin() + (res.length() + exp_), '.');
-        if (res[0 + (sign_ == -1 ? 1 : 0)] == '.') {
-            res.insert(res.begin() + (res.length() + exp_) - 1, '0');
+        if (res.front() == '.') {
+            res = "0" + res;
         }
+    }
+
+    if (with_sign) {
+        res = (sign_ == -1 ? "-" : "") + res;
     }
     return res;
 }
