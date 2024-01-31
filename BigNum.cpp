@@ -4,6 +4,8 @@
 
 #include "BigNum.h"
 
+#include <utility>
+
 BigNum::BigNum() {
     Init();
 }
@@ -312,8 +314,10 @@ BigNum operator*(const BigNum& first, const BigNum& second) {
     return res;
 }
 
-BigNum operator/(BigNum first, const BigNum& second) {
+BigNum Division(BigNum first, const BigNum& second, int32_t cur_accuracy) {
+    if (cur_accuracy <= BigNum::division_accuracy) return 0;
     if (first == 0) return 0;
+
     BigNum res = 0;
     BigNum divider = 0;
     std::cout << std::endl;
@@ -321,24 +325,26 @@ BigNum operator/(BigNum first, const BigNum& second) {
     std::cout << "LOG: calculating divider ..." << std::endl;
     while ((divider + 1) * second <= first) {
         divider = divider + 1;
-//        auto tmp = (divider + 1) * second;
-//        std::cout << divider.toString() << " " << tmp.toString() << " cmp to " << first.toString() << '\n';
     }
     std::cout << "LOG: divider = " << divider.toString() << std::endl;
 
     if (divider == 0) {
         first = first * 10;
         std::cout << "LOG: divider == 0   ==>   res = " << first.toString() << " / " << second.toString() << std::endl;
-        res = first / second;
+        res = Division(std::move(first), second, cur_accuracy - 1);
         --res.exp_;
     } else {
         first = first - second * divider;
         std::cout << "LOG: divider == "<< divider.toString() <<"  ==>   res = " << first.toString() << " / " << second.toString() << std::endl;
-        res = divider + first / second;
+        res = divider + Division(std::move(first), second, cur_accuracy);
     }
 
     res.RemoveInsignificantZeroes();
     return res;
+}
+
+BigNum operator/(BigNum first, const BigNum& second) {
+    return Division(std::move(first), second, 0);
 }
 
 void swap(BigNum &lhs, BigNum &rhs) {
@@ -404,26 +410,4 @@ void BigNum::RemoveInsignificantZeroes() {
 
     str = toString();
     std::cout << "  become = " << str << std::endl;
-
-//    auto str = toString();
-////    std::cout << "LOG(RemoveInsignificantZeroes): was = " << str;
-//    auto itr = std::find(str.begin(), str.end(), '.');
-//    if (itr != str.end()) {
-//        while (str.back() == '0') {
-//            str.pop_back();
-//        }
-//        while (str.front() == '0' && *(str.begin() + 1) != '.') {
-//            str.erase(str.begin());
-//        }
-//    } else {
-//        while (str.front() == '0' && str.length() > 1) {
-//            str.erase(str.begin());
-//        }
-//    }
-//    Init(str);
-//    blocks_.clear();
-////    std::cout << "  become = " << str << std::endl;
-//    str.erase(std::find(str.begin(), str.end(), '.'));
-//    std::reverse(str.begin(), str.end());
-//    SeparateToBlocks(str);
 }
