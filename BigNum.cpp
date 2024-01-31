@@ -185,6 +185,7 @@ BigNum operator+(BigNum first, BigNum second) {
         first.blocks_[ind] %= BigNum::base_;
     }
 
+    first.RemoveInsignificantZeroes();
     return first;
 }
 
@@ -235,6 +236,7 @@ BigNum operator-(BigNum first, BigNum second) {
         first.sign_ = -1;
     }
 
+    first.RemoveInsignificantZeroes();
     return first;
 }
 
@@ -252,25 +254,24 @@ bool operator<(const BigNum &first, const BigNum &second) {
     auto str1 = first.toString(false);
     auto str2 = second.toString(false);
 
-    if (str1.length() < str2.length()) return true;
-    if (str1.length() > str2.length()) return false;
+//    if (str1.length() < str2.length()) return true;
+//    if (str1.length() > str2.length()) return false;
 
-    for (size_t ind = 0; ind < std::max(str1.length(), str2.length()); ++ind) {
-        if (ind < str1.length() && ind < str2.length()) {
-            if (str1[ind] < str2[ind]) {
-                return true;
-            } else {
-                return false;
-            }
-        } else if (ind < str1.length()) {
-            if (str1[ind] != 0) {
-                return false;
-            }
-        } else {
-            if (str2[ind] != 0) {
-                return true;
-            }
-        }
+    auto itr1 = std::find(str1.begin(), str1.end(), '.');
+    auto itr2 = std::find(str2.begin(), str2.end(), '.');
+    if (std::distance(str1.begin(), itr1) < std::distance(str2.begin(), itr2)) return true;
+    if (std::distance(str1.begin(), itr1) > std::distance(str2.begin(), itr2)) return false;
+
+    for (size_t ind = 0; str1.begin() + ind != itr1; ++ind) {
+        if (str1[ind] < str2[ind]) return true;
+        if (str1[ind] > str2[ind]) return false;
+    }
+
+    while (itr1 < str1.end() && itr2 < str2.end()) {
+        if (*itr1 > *itr2) return false;
+        if (*itr1 < *itr2) return true;
+        ++itr1;
+        ++itr2;
     }
 
     return false;
@@ -284,6 +285,9 @@ BigNum::BigNum(BigNum &&other) noexcept {
 }
 
 BigNum operator*(const BigNum& first, const BigNum& second) {
+    if (first < second) {
+        return second * first;
+    }
     BigNum res = 0;
     for (auto block : second.blocks_) {
         uint64_t accum = 0;
@@ -303,6 +307,8 @@ BigNum operator*(const BigNum& first, const BigNum& second) {
 
     res.sign_ = first.sign_ * second.sign_;
     res.exp_ = first.exp_ + second.exp_;
+
+    res.RemoveInsignificantZeroes();
     return res;
 }
 
@@ -310,18 +316,28 @@ BigNum operator/(BigNum first, const BigNum& second) {
     if (first == 0) return 0;
     BigNum res = 0;
     BigNum divider = 0;
-    auto tmp = (divider + 1) * second;
+    std::cout << std::endl;
+    std::cout << "LOG: first = " << first.toString() << "   second = " << second.toString() << std::endl;
+    std::cout << "LOG: calculating divider ..." << std::endl;
     while ((divider + 1) * second <= first) {
         divider = divider + 1;
+//        auto tmp = (divider + 1) * second;
+//        std::cout << divider.toString() << " " << tmp.toString() << " cmp to " << first.toString() << '\n';
     }
+    std::cout << "LOG: divider = " << divider.toString() << std::endl;
+
     if (divider == 0) {
         first = first * 10;
-        --res.exp_;
+        std::cout << "LOG: divider == 0   ==>   res = " << first.toString() << " / " << second.toString() << std::endl;
         res = first / second;
+        --res.exp_;
     } else {
         first = first - second * divider;
-        res = res + divider + first / second;
+        std::cout << "LOG: divider == "<< divider.toString() <<"  ==>   res = " << first.toString() << " / " << second.toString() << std::endl;
+        res = divider + first / second;
     }
+
+    res.RemoveInsignificantZeroes();
     return res;
 }
 
@@ -352,4 +368,39 @@ bool operator>=(const BigNum& first, const BigNum& second) {
 
 bool operator<=(const BigNum& first, const BigNum& second) {
     return first < second || first == second;
+}
+
+void BigNum::RemoveInsignificantZeroes() {
+//    while ((exp_ >= 0 ? blocks_.back(): blocks_.front()) == 0 && blocks_.size() > 1) {
+//        if (exp_ >= 0) {
+//            blocks_.pop_back();
+//        } else {
+//            blocks_.erase(blocks_.begin());
+//            exp_ += 4;
+//        }
+//    }
+//    if (blocks_.size() == 1 && blocks_.front() == 0) {
+//        exp_ = 0;
+//    }
+
+    auto str = toString();
+    std::cout << "LOG(RemoveInsignificantZeroes): was = " << str;
+    auto itr = std::find(str.begin(), str.end(), '.');
+    if (itr != str.end()) {
+        while (str.back() == '0') {
+            str.pop_back();
+        }
+        while (str.front() == '0' && *(str.begin() + 1) != '.') {
+            str.erase(str.begin());
+        }
+    } else {
+        while (str.front() == '0' && str.length() > 1) {
+            str.erase(str.begin());
+        }
+    }
+    blocks_.clear();
+    std::cout << "  become = " << str << std::endl;
+    str.erase(std::find(str.begin(), str.end(), '.'));
+    std::reverse(str.begin(), str.end());
+    SeparateToBlocks(str);
 }

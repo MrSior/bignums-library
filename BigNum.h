@@ -32,6 +32,7 @@ private:
 
 
     void SeparateToBlocks(const std::string& str);
+    void RemoveInsignificantZeroes();
 public:
     BigNum();
 
