@@ -371,36 +371,59 @@ bool operator<=(const BigNum& first, const BigNum& second) {
 }
 
 void BigNum::RemoveInsignificantZeroes() {
-//    while ((exp_ >= 0 ? blocks_.back(): blocks_.front()) == 0 && blocks_.size() > 1) {
-//        if (exp_ >= 0) {
-//            blocks_.pop_back();
-//        } else {
-//            blocks_.erase(blocks_.begin());
-//            exp_ += 4;
-//        }
-//    }
-//    if (blocks_.size() == 1 && blocks_.front() == 0) {
-//        exp_ = 0;
-//    }
-
     auto str = toString();
     std::cout << "LOG(RemoveInsignificantZeroes): was = " << str;
-    auto itr = std::find(str.begin(), str.end(), '.');
-    if (itr != str.end()) {
-        while (str.back() == '0') {
-            str.pop_back();
-        }
-        while (str.front() == '0' && *(str.begin() + 1) != '.') {
-            str.erase(str.begin());
-        }
-    } else {
-        while (str.front() == '0' && str.length() > 1) {
-            str.erase(str.begin());
+
+    bool isAllZero = true;
+    for (auto& elem : blocks_) {
+        if (elem != 0) {
+            isAllZero = false;
         }
     }
-    blocks_.clear();
+    if (isAllZero) {
+        Init("0");
+        str = toString();
+        std::cout << "  become = " << str << std::endl;
+        return;
+    }
+
+    if (exp_ >= 0) {
+        if (blocks_.front() == 0) {
+            blocks_.erase(blocks_.begin());
+        }
+        if (blocks_.empty()) {
+            blocks_.push_back(0);
+        }
+    } else {
+        size_t covered_blocks = (-exp_) / block_size_ + ((-exp_) % block_size_ == 0 ? 0 : 1);
+        while (blocks_.size() > covered_blocks) {
+            if (blocks_.back() != 0) break;
+            blocks_.pop_back();
+        }
+    }
+
+    str = toString();
     std::cout << "  become = " << str << std::endl;
-    str.erase(std::find(str.begin(), str.end(), '.'));
-    std::reverse(str.begin(), str.end());
-    SeparateToBlocks(str);
+
+//    auto str = toString();
+////    std::cout << "LOG(RemoveInsignificantZeroes): was = " << str;
+//    auto itr = std::find(str.begin(), str.end(), '.');
+//    if (itr != str.end()) {
+//        while (str.back() == '0') {
+//            str.pop_back();
+//        }
+//        while (str.front() == '0' && *(str.begin() + 1) != '.') {
+//            str.erase(str.begin());
+//        }
+//    } else {
+//        while (str.front() == '0' && str.length() > 1) {
+//            str.erase(str.begin());
+//        }
+//    }
+//    Init(str);
+//    blocks_.clear();
+////    std::cout << "  become = " << str << std::endl;
+//    str.erase(std::find(str.begin(), str.end(), '.'));
+//    std::reverse(str.begin(), str.end());
+//    SeparateToBlocks(str);
 }
