@@ -23,8 +23,6 @@ void BigNum::Init() {
     blocks_ = std::vector<uint16_t>(0);
     sign_ = 1;
     exp_ = 0;
-    block_size_ = std::to_string(base_).length() - 1;
-//    base_ = static_cast<uint64_t>(std::pow(10, block_size_));
 }
 
 void BigNum::Init(std::string str) {
@@ -147,7 +145,6 @@ BigNum &BigNum::operator=(BigNum &&other) noexcept {
     blocks_ = std::move(other.blocks_);
     sign_ = other.sign_;
     exp_ = other.exp_;
-    block_size_ = other.block_size_;
     return *this;
 }
 
@@ -246,7 +243,6 @@ BigNum::BigNum(const BigNum &other) {
     blocks_ = other.blocks_;
     sign_ = other.sign_;
     exp_ = other.exp_;
-    block_size_ = other.block_size_;
 }
 
 bool operator<(const BigNum &first, const BigNum &second) {
@@ -283,7 +279,6 @@ BigNum::BigNum(BigNum &&other) noexcept {
     blocks_ = std::move(other.blocks_);
     sign_ = other.sign_;
     exp_ = other.exp_;
-    block_size_ = other.block_size_;
 }
 
 BigNum operator*(const BigNum& first, const BigNum& second) {
@@ -291,20 +286,20 @@ BigNum operator*(const BigNum& first, const BigNum& second) {
         return second * first;
     }
     BigNum res = 0;
+    int cur_block_ind = 0;
     for (auto block : second.blocks_) {
         uint64_t accum = 0;
         BigNum inter_term;
-        for (int second_ind = 0; second_ind < first.blocks_.size(); ++second_ind) {
-            auto temp_val = block * first.blocks_[second_ind] + accum;
+        for (auto block_in_first : first.blocks_) {
+            auto temp_val = block * block_in_first + accum;
             inter_term.blocks_.push_back(temp_val % BigNum::base_);
             accum = (temp_val) / BigNum::base_;
         }
         if (accum != 0) {
             inter_term.blocks_.push_back(accum);
         }
-        auto str1 = inter_term.toString();
+        inter_term.exp_ = cur_block_ind++ * BigNum::block_size_;
         res = res + inter_term;
-        auto str2 = res.toString();
     }
 
     res.sign_ = first.sign_ * second.sign_;
@@ -349,7 +344,6 @@ BigNum operator/(BigNum first, const BigNum& second) {
 
 void swap(BigNum &lhs, BigNum &rhs) {
     std::swap(lhs.blocks_, rhs.blocks_);
-    std::swap(lhs.block_size_, rhs.block_size_);
     std::swap(lhs.exp_, rhs.exp_);
     std::swap(lhs.sign_, rhs.sign_);
 }

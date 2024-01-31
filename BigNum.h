@@ -25,7 +25,7 @@ private:
     int sign_;
     static const uint64_t base_ = 10000;
     int32_t exp_;
-    int block_size_;
+    static const int block_size_ = 4;
     static const int32_t division_accuracy = -100;
 
     void Init();
