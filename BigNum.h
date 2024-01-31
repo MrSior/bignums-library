@@ -78,7 +78,11 @@ public:
     friend bool operator==(const BigNum&, const BigNum&);
     friend bool operator>(const BigNum&, const BigNum&);
     friend bool operator>=(const BigNum&, const BigNum&);
+
 };
 
+static BigNum operator"" _bn(const char* val) {
+    return {val};
+}
 
 #endif //BIGNUMSLIBRARY_BIGNUM_H
