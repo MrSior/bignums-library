@@ -252,9 +252,6 @@ bool operator<(const BigNum &first, const BigNum &second) {
     auto str1 = first.toString(false);
     auto str2 = second.toString(false);
 
-//    if (str1.length() < str2.length()) return true;
-//    if (str1.length() > str2.length()) return false;
-
     auto itr1 = std::find(str1.begin(), str1.end(), '.');
     auto itr2 = std::find(str2.begin(), str2.end(), '.');
     if (std::distance(str1.begin(), itr1) < std::distance(str2.begin(), itr2)) return true;
@@ -355,7 +352,29 @@ bool operator!=(const BigNum& first, const BigNum& second) {
 bool operator==(const BigNum& first, const BigNum& second) {
     auto first_str = first.toString();
     auto second_str = second.toString();
-    return std::equal(first_str.begin(), first_str.end(), second_str.begin(), second_str.end());
+
+    auto itr1 = first_str.begin();
+    auto itr2 = second_str.begin();
+
+    while (itr1 < first_str.end() && itr2 < second_str.end()) {
+        if (*itr1 != *itr2) return false;
+        itr1++;
+        itr2++;
+    }
+
+    auto is_only_zeroes = [](decltype(itr1)& itr, decltype(first_str)& str) {
+        if (itr == str.end()) return true;
+
+        if (itr < str.end() && *itr != '.') return false;
+        ++itr;
+        while (itr < str.end()) {
+            if (*itr != '0') return false;
+            ++itr;
+        }
+        return true;
+    };
+
+    return is_only_zeroes(itr1, first_str) && is_only_zeroes(itr2, second_str);
 }
 
 bool operator>(const BigNum& first, const BigNum& second) {
