@@ -26,7 +26,7 @@ private:
     static const uint64_t base_ = 10000;
     int32_t exp_;
     static const int block_size_ = 4;
-    static const int32_t division_accuracy = -100;
+    static const int32_t division_accuracy = 100;
 
     void Init();
     void Init(std::string str);
@@ -72,7 +72,9 @@ public:
     friend BigNum operator-(BigNum, BigNum);
     friend BigNum operator/(BigNum, const BigNum&);
     friend BigNum operator*(const BigNum&, const BigNum&);
-    friend BigNum Division(BigNum, const BigNum&, int32_t);
+    friend BigNum BigNumDiv(BigNum, const BigNum&, int32_t cur_precision);
+
+    friend BigNum Division(BigNum, const BigNum&, uint16_t precision);
 
     friend bool operator<(const BigNum&, const BigNum&);
     friend bool operator<=(const BigNum&, const BigNum&);
@@ -80,8 +82,9 @@ public:
     friend bool operator==(const BigNum&, const BigNum&);
     friend bool operator>(const BigNum&, const BigNum&);
     friend bool operator>=(const BigNum&, const BigNum&);
-
 };
+
+//static BigNum Division(BigNum, const BigNum&, int32_t precision);
 
 static BigNum operator"" _bn(const char* val) {
     return {val};

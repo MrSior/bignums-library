@@ -306,37 +306,8 @@ BigNum operator*(const BigNum& first, const BigNum& second) {
     return res;
 }
 
-BigNum Division(BigNum first, const BigNum& second, int32_t cur_accuracy) {
-    if (cur_accuracy <= BigNum::division_accuracy) return 0;
-    if (first == 0) return 0;
-
-    BigNum res = 0;
-    BigNum divider = 0;
-    std::cout << std::endl;
-    std::cout << "LOG: first = " << first.toString() << "   second = " << second.toString() << std::endl;
-    std::cout << "LOG: calculating divider ..." << std::endl;
-    while ((divider + 1) * second <= first) {
-        divider = divider + 1;
-    }
-    std::cout << "LOG: divider = " << divider.toString() << std::endl;
-
-    if (divider == 0) {
-        first = first * 10;
-        std::cout << "LOG: divider == 0   ==>   res = " << first.toString() << " / " << second.toString() << std::endl;
-        res = Division(std::move(first), second, cur_accuracy - 1);
-        --res.exp_;
-    } else {
-        first = first - second * divider;
-        std::cout << "LOG: divider == "<< divider.toString() <<"  ==>   res = " << first.toString() << " / " << second.toString() << std::endl;
-        res = divider + Division(std::move(first), second, cur_accuracy);
-    }
-
-    res.RemoveInsignificantZeroes();
-    return res;
-}
-
-BigNum operator/(BigNum first, const BigNum& second) {
-    return Division(std::move(first), second, 0);
+BigNum Division(BigNum first, const BigNum& second, uint16_t precision) {
+    return BigNumDiv(first, second, precision);
 }
 
 void swap(BigNum &lhs, BigNum &rhs) {
@@ -423,4 +394,37 @@ void BigNum::RemoveInsignificantZeroes() {
 
     str = toString();
     std::cout << "  become = " << str << std::endl;
+}
+
+BigNum BigNumDiv(BigNum first, const BigNum& second, int32_t cur_precision) {
+    if (cur_precision < 0) return 0;
+    if (first == 0) return 0;
+
+    BigNum res = 0;
+    BigNum divider = 0;
+    std::cout << std::endl;
+    std::cout << "LOG: first = " << first.toString() << "   second = " << second.toString() << std::endl;
+    std::cout << "LOG: calculating divider ..." << std::endl;
+    while ((divider + 1) * second <= first) {
+        divider = divider + 1;
+    }
+    std::cout << "LOG: divider = " << divider.toString() << std::endl;
+
+    if (divider == 0) {
+        first = first * 10;
+        std::cout << "LOG: divider == 0   ==>   res = " << first.toString() << " / " << second.toString() << std::endl;
+        res = BigNumDiv(std::move(first), second, cur_precision - 1);
+        --res.exp_;
+    } else {
+        first = first - second * divider;
+        std::cout << "LOG: divider == "<< divider.toString() <<"  ==>   res = " << first.toString() << " / " << second.toString() << std::endl;
+        res = divider + BigNumDiv(std::move(first), second, cur_precision);
+    }
+
+    res.RemoveInsignificantZeroes();
+    return res;
+}
+
+BigNum operator/(BigNum first, const BigNum& second) {
+    return BigNumDiv(std::move(first), second, BigNum::division_accuracy);
 }
