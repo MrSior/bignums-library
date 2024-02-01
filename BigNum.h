@@ -72,9 +72,9 @@ public:
     friend BigNum operator-(BigNum, BigNum);
     friend BigNum operator/(BigNum, const BigNum&);
     friend BigNum operator*(const BigNum&, const BigNum&);
-    friend BigNum BigNumDiv(BigNum, const BigNum&, int32_t cur_precision);
+    friend BigNum BigNumDiv(BigNum, const BigNum&, int32_t precision);
 
-    friend BigNum Division(BigNum, const BigNum&, uint16_t precision);
+//    friend BigNum Division(BigNum, const BigNum&, uint16_t precision);
 
     friend bool operator<(const BigNum&, const BigNum&);
     friend bool operator<=(const BigNum&, const BigNum&);
@@ -84,10 +84,6 @@ public:
     friend bool operator>=(const BigNum&, const BigNum&);
 };
 
-//static BigNum Division(BigNum, const BigNum&, int32_t precision);
-
-static BigNum operator"" _bn(const char* val) {
-    return {val};
-}
+BigNum operator"" _bn(const char* val);
 
 #endif //BIGNUMSLIBRARY_BIGNUM_H
