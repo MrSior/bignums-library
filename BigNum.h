@@ -65,6 +65,7 @@ public:
     [[nodiscard]] std::string toString(bool with_sign = true, bool with_dote = true) const;
     int getSign() { return sign_; }
     std::vector<uint16_t> getBlocks() { return blocks_; }
+    int32_t getExp() { return exp_; }
     void setSign(int sign) { this->sign_ = sign; }
     void setExp(int32_t exp) { this->exp_ = exp; }
     bool isOdd() const { return blocks_.front() & 1; }
