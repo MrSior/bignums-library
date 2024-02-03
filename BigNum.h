@@ -65,6 +65,11 @@ public:
     [[nodiscard]] std::string toString(bool with_sign = true, bool with_dote = true) const;
     int getSign() { return sign_; }
     std::vector<uint16_t> getBlocks() { return blocks_; }
+    void setSign(int sign) { this->sign_ = sign; }
+    void setExp(int32_t exp) { this->exp_ = exp; }
+    bool isOdd() const { return blocks_.front() & 1; }
+
+    void evalf(int32_t precision);
 
     friend void swap(BigNum& lhs, BigNum& rhs);
 
@@ -72,7 +77,7 @@ public:
     friend BigNum operator-(BigNum, BigNum);
     friend BigNum operator/(BigNum, const BigNum&);
     friend BigNum operator*(const BigNum&, const BigNum&);
-    friend BigNum BigNumDiv(BigNum, const BigNum&, int32_t precision);
+    friend BigNum BigNumDiv(BigNum first, const BigNum& second, int32_t precision, bool debug);
 
 //    friend BigNum Division(BigNum, const BigNum&, uint16_t precision);
 
@@ -85,5 +90,6 @@ public:
 };
 
 BigNum operator"" _bn(const char* val);
+BigNum CalcPi(int32_t precision);
 
 #endif //BIGNUMSLIBRARY_BIGNUM_H

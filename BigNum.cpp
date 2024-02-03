@@ -1,9 +1,4 @@
-//
-// Created by Семён on 25.01.2024.
-//
-
 #include "BigNum.h"
-
 #include <utility>
 
 BigNum::BigNum() {
@@ -112,30 +107,57 @@ void BigNum::SeparateToBlocks(const std::string &str) {
 }
 
 void BigNum::ShiftToExp(int32_t new_exp) {
+//    if (new_exp == exp_) return;
+//    if (new_exp > exp_) {
+//        throw BigNumError("ShiftToExp can only shift to lower exponent");
+//    }
+//    decltype(exp_) diff_exp = exp_ - new_exp;
+//
+//    std::string str;
+//    for (auto itr = blocks_.end() - 1; itr >= blocks_.begin(); --itr) {
+//        std::string num = std::to_string(*itr);
+//        if (itr == blocks_.end() - 1) {
+//            str += num;
+//        } else {
+//            str += std::string(block_size_ - num.length(), '0') + num;
+//        }
+//
+//        if (itr == blocks_.begin()) {
+//            str += std::string(diff_exp, '0');
+//        }
+//    }
+//
+//    exp_ = new_exp;
+//    blocks_.clear();
+//    std::reverse(str.begin(), str.end());
+//    SeparateToBlocks(str);
+
     if (new_exp == exp_) return;
     if (new_exp > exp_) {
         throw BigNumError("ShiftToExp can only shift to lower exponent");
     }
     decltype(exp_) diff_exp = exp_ - new_exp;
 
-    std::string str;
-    for (auto itr = blocks_.end() - 1; itr >= blocks_.begin(); --itr) {
-        std::string num = std::to_string(*itr);
-        if (itr == blocks_.end() - 1) {
-            str += num;
+    while (diff_exp > 0) {
+        if (diff_exp >= 4) {
+            blocks_.insert(blocks_.begin(), 0);
+            diff_exp -= 4;
         } else {
-            str += std::string(block_size_ - num.length(), '0') + num;
-        }
-
-        if (itr == blocks_.begin()) {
-            str += std::string(diff_exp, '0');
+            int32_t mult = std::pow(10, diff_exp);
+            int64_t acum = 0;
+            for (auto& block : blocks_) {
+                int64_t temp_val = block * mult + acum;
+                acum = (temp_val) / BigNum::base_;
+                block = (temp_val) % BigNum::base_;
+            }
+            if (acum != 0) {
+                blocks_.push_back(acum);
+            }
+            diff_exp = 0;
         }
     }
 
     exp_ = new_exp;
-    blocks_.clear();
-    std::reverse(str.begin(), str.end());
-    SeparateToBlocks(str);
 }
 
 BigNum &BigNum::operator=(BigNum &&other) noexcept {
@@ -246,29 +268,52 @@ BigNum::BigNum(const BigNum &other) {
 }
 
 bool operator<(const BigNum &first, const BigNum &second) {
+//    if (first.sign_ < second.sign_) return true;
+//    if (first.sign_ > second.sign_) return false;
+//
+//    auto str1 = first.toString(false);
+//    auto str2 = second.toString(false);
+//
+//    auto itr1 = std::find(str1.begin(), str1.end(), '.');
+//    auto itr2 = std::find(str2.begin(), str2.end(), '.');
+//    if (std::distance(str1.begin(), itr1) < std::distance(str2.begin(), itr2)) return true;
+//    if (std::distance(str1.begin(), itr1) > std::distance(str2.begin(), itr2)) return false;
+//
+//    for (size_t ind = 0; str1.begin() + ind != itr1; ++ind) {
+//        if (str1[ind] < str2[ind]) return true;
+//        if (str1[ind] > str2[ind]) return false;
+//    }
+//
+//    while (itr1 < str1.end() && itr2 < str2.end()) {
+//        if (*itr1 > *itr2) return false;
+//        if (*itr1 < *itr2) return true;
+//        ++itr1;
+//        ++itr2;
+//    }
+//
+//    return false;
     if (first.sign_ < second.sign_) return true;
     if (first.sign_ > second.sign_) return false;
 
-    auto str1 = first.toString(false);
-    auto str2 = second.toString(false);
+    auto max_precision = std::min(first.exp_, second.exp_);
+    auto lh = first;
+    auto rh = second;
+    lh.ShiftToExp(max_precision);
+    rh.ShiftToExp(max_precision);
 
-    auto itr1 = std::find(str1.begin(), str1.end(), '.');
-    auto itr2 = std::find(str2.begin(), str2.end(), '.');
-    if (std::distance(str1.begin(), itr1) < std::distance(str2.begin(), itr2)) return true;
-    if (std::distance(str1.begin(), itr1) > std::distance(str2.begin(), itr2)) return false;
+    auto str_lh = lh.toString();
+    auto str_rh = rh.toString();
+    if (str_lh.length() < str_rh.length()) return true;
+    if (str_lh.length() > str_rh.length()) return false;
 
-    for (size_t ind = 0; str1.begin() + ind != itr1; ++ind) {
-        if (str1[ind] < str2[ind]) return true;
-        if (str1[ind] > str2[ind]) return false;
+    for (size_t ind = 0; ind < str_lh.length(); ++ind) {
+        if (str_lh[ind] < str_rh[ind]) {
+            return true;
+        }
+        if (str_lh[ind] > str_rh[ind]) {
+            return false;
+        }
     }
-
-    while (itr1 < str1.end() && itr2 < str2.end()) {
-        if (*itr1 > *itr2) return false;
-        if (*itr1 < *itr2) return true;
-        ++itr1;
-        ++itr2;
-    }
-
     return false;
 }
 
@@ -300,7 +345,7 @@ BigNum operator*(const BigNum& first, const BigNum& second) {
     }
 
     res.sign_ = first.sign_ * second.sign_;
-    res.exp_ = first.exp_ + second.exp_;
+    res.exp_ += first.exp_ + second.exp_;
 
     res.RemoveInsignificantZeroes();
     return res;
@@ -321,31 +366,47 @@ bool operator!=(const BigNum& first, const BigNum& second) {
 }
 
 bool operator==(const BigNum& first, const BigNum& second) {
-    auto first_str = first.toString();
-    auto second_str = second.toString();
+//    auto first_str = first.toString();
+//    auto second_str = second.toString();
+//
+//    auto itr1 = first_str.begin();
+//    auto itr2 = second_str.begin();
+//
+//    while (itr1 < first_str.end() && itr2 < second_str.end()) {
+//        if (*itr1 != *itr2) return false;
+//        itr1++;
+//        itr2++;
+//    }
+//
+//    auto is_only_zeroes = [](decltype(itr1)& itr, decltype(first_str)& str) {
+//        if (itr == str.end()) return true;
+//
+//        if (itr < str.end() && *itr != '.') return false;
+//        ++itr;
+//        while (itr < str.end()) {
+//            if (*itr != '0') return false;
+//            ++itr;
+//        }
+//        return true;
+//    };
+//
+//    return is_only_zeroes(itr1, first_str) && is_only_zeroes(itr2, second_str);
+    auto max_precision = std::min(first.exp_, second.exp_);
+    auto lh = first;
+    auto rh = second;
+    lh.ShiftToExp(max_precision);
+    rh.ShiftToExp(max_precision);
 
-    auto itr1 = first_str.begin();
-    auto itr2 = second_str.begin();
+    auto str_lh = lh.toString();
+    auto str_rh = rh.toString();
+    if (str_lh.length() != str_rh.length()) return false;
 
-    while (itr1 < first_str.end() && itr2 < second_str.end()) {
-        if (*itr1 != *itr2) return false;
-        itr1++;
-        itr2++;
-    }
-
-    auto is_only_zeroes = [](decltype(itr1)& itr, decltype(first_str)& str) {
-        if (itr == str.end()) return true;
-
-        if (itr < str.end() && *itr != '.') return false;
-        ++itr;
-        while (itr < str.end()) {
-            if (*itr != '0') return false;
-            ++itr;
+    for (size_t ind = 0; ind < str_lh.length(); ++ind) {
+        if (str_lh[ind] != str_rh[ind]) {
+            return false;
         }
-        return true;
-    };
-
-    return is_only_zeroes(itr1, first_str) && is_only_zeroes(itr2, second_str);
+    }
+    return true;
 }
 
 bool operator>(const BigNum& first, const BigNum& second) {
@@ -361,9 +422,6 @@ bool operator<=(const BigNum& first, const BigNum& second) {
 }
 
 void BigNum::RemoveInsignificantZeroes() {
-    auto str = toString();
-    std::cout << "LOG(RemoveInsignificantZeroes): was = " << str;
-
     bool isAllZero = true;
     for (auto& elem : blocks_) {
         if (elem != 0) {
@@ -372,14 +430,16 @@ void BigNum::RemoveInsignificantZeroes() {
     }
     if (isAllZero) {
         Init("0");
-        str = toString();
-        std::cout << "  become = " << str << std::endl;
         return;
     }
 
     if (exp_ >= 0) {
-        if (blocks_.front() == 0) {
+        while (blocks_.back() == 0) {
+            blocks_.pop_back();
+        }
+        while (blocks_.front() == 0) {
             blocks_.erase(blocks_.begin());
+            exp_ += BigNum::block_size_;
         }
         if (blocks_.empty()) {
             blocks_.push_back(0);
@@ -391,34 +451,73 @@ void BigNum::RemoveInsignificantZeroes() {
             blocks_.pop_back();
         }
     }
-
-    str = toString();
-    std::cout << "  become = " << str << std::endl;
 }
 
-BigNum BigNumDiv(BigNum first, const BigNum& second, int32_t precision) {
+BigNum BigNumDiv(BigNum first, const BigNum& second, int32_t precision, bool debug = false) {
     if (precision < 0) return 0;
     if (first == 0) return 0;
 
     BigNum res = 0;
     BigNum divider = 0;
-    std::cout << std::endl;
-    std::cout << "LOG: first = " << first.toString() << "   second = " << second.toString() << std::endl;
-    std::cout << "LOG: calculating divider ..." << std::endl;
-    while ((divider + 1) * second <= first) {
-        divider = divider + 1;
-    }
-    std::cout << "LOG: divider = " << divider.toString() << std::endl;
+    BigNum lh = 0;
+    BigNum rh = first + 1;
 
+    if (debug) {
+        std::cout << std::endl;
+        std::cout << "LOG: first = " << first.toString() << "   second = " << second.toString() << std::endl;
+        std::cout << "LOG: calculating divider ..." << std::endl;
+    }
+
+    if (first >= second) {
+        int cnt = 0;
+        while (rh - lh > 1) {
+            auto mid = lh + (rh - lh) * 0.5_bn;
+            mid.evalf(0);
+
+            if (debug) {
+                cnt++;
+                if (cnt > 300) {
+                    exit(1);
+                }
+                std::cout << "LOG (BINSEARCH): lh = " << lh.toString() << "\tmid = " << mid.toString() << "\trh = "
+                          << rh.toString() << std::endl;
+            }
+
+            if (second * mid > first) {
+                rh = mid;
+            } else if (second * mid <= first) {
+                lh = mid;
+            }
+        }
+        divider = lh;
+    }
+
+//    while ((divider + 1) * second <= first) {
+//        std::cout << divider.toString() << std::endl;
+//        if (divider.toString() == "31415926533") {
+//            std::cout << ((divider + 1) * second).toString() << '\n';
+//        }
+//        divider = divider + 1;
+//    }
+
+    if (debug) {
+        std::cout << "LOG: divider = " << divider.toString() << std::endl;
+    }
     if (divider == 0) {
         first = first * 10;
-        std::cout << "LOG: divider == 0   ==>   res = " << first.toString() << " / " << second.toString() << std::endl;
-        res = BigNumDiv(std::move(first), second, precision - 1);
+        if (debug) {
+            std::cout << "LOG: divider == 0   ==>   res = " << first.toString() << " / " << second.toString()
+                      << std::endl;
+        }
+        res = BigNumDiv(std::move(first), second, precision - 1, debug);
         --res.exp_;
     } else {
         first = first - second * divider;
-        std::cout << "LOG: divider == "<< divider.toString() <<"  ==>   res = " << first.toString() << " / " << second.toString() << std::endl;
-        res = divider + BigNumDiv(std::move(first), second, precision);
+        if (debug) {
+            std::cout << "LOG: divider == " << divider.toString() << "  ==>   res = " << first.toString() << " / "
+                      << second.toString() << std::endl;
+        }
+        res = divider + BigNumDiv(std::move(first), second, precision, debug);
     }
 
     res.RemoveInsignificantZeroes();
@@ -429,6 +528,98 @@ BigNum operator/(BigNum first, const BigNum& second) {
     return BigNumDiv(std::move(first), second, BigNum::division_accuracy);
 }
 
+void BigNum::evalf(int32_t precision) {
+    while (precision > exp_) {
+        if (precision - exp_ >= 4) {
+            blocks_.erase(blocks_.begin());
+            exp_ += 4;
+        } else {
+            *blocks_.begin() -= blocks_.front() % static_cast<int>(std::pow(10, precision - exp_));
+            break;
+        }
+    }
+}
+
 BigNum operator"" _bn(const char* val) {
     return {val};
 }
+
+BigNum CalcPi(int32_t precision) {
+
+//    auto arctan = [](const BigNum& x, int steps) {
+//        BigNum res = x;
+//        auto numer = x * x * x;
+//        int denom = 3;
+////        std::cout << x.toString() << std::endl;
+//        for (int i = 1; i < steps; ++i, denom += 2, numer = numer * x * x) {
+//            auto sum = BigNumDiv(numer, denom, 70, false);
+////            std::cout << numer.toString() << " / " << denom << " = " << sum.toString() << std::endl;
+//            if (i % 2 == 0) {
+//                res = res + sum;
+//            } else {
+//                res = res - sum;
+//            }
+//            std::cout << "Step = " << i << "\n";
+//        }
+//        return res;
+//    };
+//
+//    auto arc1 = arctan(1_bn / 5_bn, 200);
+//    auto arc2 = arctan(BigNumDiv(1_bn, 239_bn, 70), 40);
+//    return 4 * (4 * arc1 - arc2);
+
+    precision = 10;
+    BigNum C = 640320;
+    BigNum C3_OVER_24 = "10939058860032000";
+
+    struct triple {
+        BigNum first;
+        BigNum second;
+        BigNum third;
+    };
+
+    std::function<triple(int64_t, int64_t)> bs;
+    bs = [&bs, &C3_OVER_24](const int64_t& a, const int64_t& b) -> triple {
+        BigNum Pab = 0;
+        BigNum Qab = 0;
+        BigNum Tab = 0;
+        if (b - a == 1) {
+            if (a == 0) {
+                Pab = Qab = 1;
+            } else {
+                Pab = (6 * a - 5) * (2 * a - 1) * (6 * a - 1);
+                Qab = a * a * a * C3_OVER_24;
+            }
+            Tab = Pab * (13591409 + 545140134*a);
+            if (a & 1) {
+                Tab.setSign(Tab.getSign() * -1);
+            }
+        } else {
+            int64_t m = (a + b) / 2;
+            auto res_a = bs(a, m);
+            auto res_b = bs(m, b);
+            Pab = res_a.first * res_b.first;
+            Qab = res_a.second * res_b.second;
+            Tab = res_b.second * res_a.third + res_a.first * res_b.third;
+        }
+
+        triple res = {Pab, Qab, Tab};
+        return res;
+    };
+
+    BigNum digits_per_term = "14.181647462725477655525521678181770863769125289828726959816854332";
+    int64_t n = static_cast<int>(precision / 14.1816474627 + 1);
+    auto res = bs(0, n);
+
+    std::cout << res.second.toString() << '\n';
+    std::cout << res.third.toString() << '\n';
+    auto r = res.second * BigNum("1000249968757") * 426880;
+    std::cout << r.toString() << '\n';
+    return BigNumDiv(r, res.third, 0);
+    return BigNumDiv((1000249968757_bn * 426880_bn), 13591409_bn, 0);
+}
+
+// 3.1415926535897932384626433832795028841971693993751058209749445923
+// 3.14159265358979323846264338327950288419716939937507832635983263598326359832635983263598326359832636
+// 3.1415926535897932384626433832795028841971693993751058209749445923078188
+// 3.1415926535897932384626433832795028841971693993751058209749445923078188000
